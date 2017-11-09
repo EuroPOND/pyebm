@@ -62,9 +62,9 @@ def fit(data_in,
     from sklearn.utils import resample
 
     # Data Preparation for debm
-    pd_data_all, unique_subj_ids = util.pdReadData(data_in, 0, Labels=labels)
-    pd_data_test_all, unique_test_subj_ids = util.pdReadData(data_test, 0, Labels=labels)
-    pd_data_all, pd_data_test_all, biomarkers_list = util.CorrectConfounders(pd_data_all, pd_data_test_all, factors)
+    pd_data_all, unique_subj_ids = util.pd_read_data(data_in, 0, labels=labels)
+    pd_data_test_all, unique_test_subj_ids = util.pd_read_data(data_test, 0, labels=labels)
+    pd_data_all, pd_data_test_all, biomarkers_list = util.correct_confounders(pd_data_all, pd_data_test_all, factors)
 
     num_events = len(biomarkers_list)
     idx_cn = pd_data_all['Diagnosis'].values == 1
@@ -154,7 +154,7 @@ def fit(data_in,
         # Get Posterior Probabilities
         p_yes, p_no, likeli_post, likeli_pre = ca.classify(data_all, params_opt)
         # Probabilistic Kendall's Tau based Generalized Mallows Model
-        pi0, event_centers = wma.weighted_mallows.fitMallows(p_yes, params_opt)
+        pi0, event_centers = wma.WeightedMallows.fit_mallows(p_yes, params_opt)
         for ni in range(num_events):
             idx = np.isnan(p_yes[:, ni])
             p_yes[idx, ni] = 1 - params_opt[ni, 4, 0]
@@ -186,13 +186,13 @@ def fit(data_in,
         subj_test = pd.DataFrame(columns=['PTID', 'Orderings', 'Weights', 'Stages'])
 
         subj_train['PTID'] = ptid_all_list[i]
-        so_list, weights_list = util.Prob2ListAndWeights(p_yes)
+        so_list, weights_list = util.prob_2_list_and_weights(p_yes)
         subj_train['Orderings'] = so_list
         subj_train['Weights'] = weights_list
         subj_train['Stages'] = subj_stages
 
         if len(pd_data_test_all) > 0:
-            so_list, weights_list = util.Prob2ListAndWeights(p_yes_test)
+            so_list, weights_list = util.prob_2_list_and_weights(p_yes_test)
             subj_test['Weights'] = weights_list
             subj_test['Orderings'] = so_list
             subj_test['PTID'] = pd_data_test_all['PTID']
@@ -203,7 +203,7 @@ def fit(data_in,
     if len(data_ad_raw_list) > 1:
         wts = np.arange(num_events, 0, -1)
         wts_all = np.tile(wts, (len(data_ad_raw_list), 1)).tolist()
-        (pi0_mean, bestscore, scores) = wma.weighted_mallows.consensus(num_events, pi0_all, wts_all, [])
+        (pi0_mean, bestscore, scores) = wma.WeightedMallows.consensus(num_events, pi0_all, wts_all, [])
     else:
         pi0_mean = pi0_all[0]
 
@@ -217,12 +217,12 @@ def fit(data_in,
 
     # Visualize Results
     if default_verbose_options.Ordering == 1:
-        util.VisualizeOrdering(biomarkers_list, pi0_all, pi0_mean, default_verbose_options.PlotOrder)
+        util.visualize_ordering(biomarkers_list, pi0_all, pi0_mean, default_verbose_options.PlotOrder)
     if default_verbose_options.Distributions == 1:
         params_all = [params_opt]
-        util.VisualizeBiomarkerDistribution(data_all, params_all, biomarkers_list)
+        util.visualize_biomarker_distribution(data_all, params_all, biomarkers_list)
     if default_verbose_options.PatientStaging == 1:
-        util.VisualizeStaging(subj_stages, pd_data_all['Diagnosis'], labels)
+        util.visualize_staging(subj_stages, pd_data_all['Diagnosis'], labels)
 
     if not default_method_options.Bootstrap:
         pi0_all = pi0_all[0]

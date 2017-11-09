@@ -17,7 +17,7 @@ from __future__ import print_function
 
 def reject(data_ad, data_cn):
     import numpy as np
-    from ebmtoolbox.mixture_model import calculate_prob_mmN
+    from ebmtoolbox.mixture_model import calculate_prob_mm_n
     from ebmtoolbox.mixture_model import calculate_prob_mm
 
     m = np.shape(data_ad)
@@ -33,9 +33,9 @@ def reject(data_ad, data_cn):
             params_raw[i, 0, j] = cn_mean
             params_raw[i, 1, j] = cn_std
 
-            Dadi = np.reshape(data_ad[:, i, j], [-1, 1])
-            ad_mean = np.nanmean(Dadi)
-            ad_std = np.nanstd(Dadi) + 0.001
+            d_adi = np.reshape(data_ad[:, i, j], [-1, 1])
+            ad_mean = np.nanmean(d_adi)
+            ad_std = np.nanstd(d_adi) + 0.001
             params_raw[i, 2, j] = ad_mean
             params_raw[i, 3, j] = ad_std
             params_raw[i, 4, j] = 0.5
@@ -44,25 +44,25 @@ def reject(data_ad, data_cn):
         p[0, :, :] = params_raw[i, :, :]
 
         mcn = np.shape(data_cn)
-        Dcni_valid_c = np.zeros((mcn[0], 1, mcn[2]))
-        Dcni_valid_c[:, 0, :] = data_cn[:, i, :]
+        d_cni_valid_c = np.zeros((mcn[0], 1, mcn[2]))
+        d_cni_valid_c[:, 0, :] = data_cn[:, i, :]
         if m[2] == 1:
-            py, pn, likeli_pre, likeli_post = calculate_prob_mm(Dcni_valid_c[:, :, 0], p, val_invalid=np.nan)
+            py, pn, likeli_pre, likeli_post = calculate_prob_mm(d_cni_valid_c[:, :, 0], p, val_invalid=np.nan)
         else:
-            py, pn, likeli_pre, likeli_post = calculate_prob_mmN(Dcni_valid_c, p, val_invalid=np.nan)
+            py, pn, likeli_pre, likeli_post = calculate_prob_mm_n(d_cni_valid_c, p, val_invalid=np.nan)
         idx_in_cn = np.where(py <= 0.5)
 
         mad = np.shape(data_ad)
-        Dadi_valid_c = np.zeros((mad[0], 1, mad[2]))
-        Dadi_valid_c[:, 0, :] = data_ad[:, i, :]
+        d_adi_valid_c = np.zeros((mad[0], 1, mad[2]))
+        d_adi_valid_c[:, 0, :] = data_ad[:, i, :]
         if m[2] == 1:
-            py, pn, likeli_pre, likeli_post = calculate_prob_mm(Dadi_valid_c[:, :, 0], p, val_invalid=np.nan)
+            py, pn, likeli_pre, likeli_post = calculate_prob_mm(d_adi_valid_c[:, :, 0], p, val_invalid=np.nan)
         else:
-            py, pn, likeli_pre, likeli_post = calculate_prob_mmN(Dadi_valid_c, p, val_invalid=np.nan)
+            py, pn, likeli_pre, likeli_post = calculate_prob_mm_n(d_adi_valid_c, p, val_invalid=np.nan)
         idx_in_ad = np.where(py > 0.5)
 
-        data_cn_out.append(Dcni_valid_c[idx_in_cn])
-        data_ad_out.append(Dadi_valid_c[idx_in_ad])
+        data_cn_out.append(d_cni_valid_c[idx_in_cn])
+        data_ad_out.append(d_adi_valid_c[idx_in_ad])
         for j in range(m[2]):
             params_pruned[i, 0, j] = np.nanmean(data_cn_out[i][:, j])
             params_pruned[i, 1, j] = np.nanstd(data_cn_out[i][:, j]) + 0.001
@@ -73,7 +73,15 @@ def reject(data_ad, data_cn):
     return data_ad_out, data_cn_out, params_raw, params_pruned
 
 
-def gmm_control(data_all, data_cn_pruned, data_ad_pruned, params_nobias, type_opt=1, itvl=1.96, params_pruned=[]):
+def gmm_control(data_all,
+                data_cn_pruned,
+                data_ad_pruned,
+                params_nobias,
+                type_opt=1,
+                itvl=1.96,
+                params_pruned=None):
+    if params_pruned is None:
+        params_pruned = []
     import numpy as np
     n_events = len(data_cn_pruned)
     n_feats = data_cn_pruned[0].shape[1]
@@ -134,7 +142,7 @@ def gmm_control(data_all, data_cn_pruned, data_ad_pruned, params_nobias, type_op
 
 
 def gmm(data, n_feats, params, bnds):
-    from ebmtoolbox.mixture_model import calculate_likelihood_gmmN
+    from ebmtoolbox.mixture_model import calculate_likelihood_gmm_n
     from ebmtoolbox.mixture_model import calculate_likelihood_gmm
     import scipy.optimize as opt
     import numpy as np
@@ -150,10 +158,10 @@ def gmm(data, n_feats, params, bnds):
             p[(j * 4) + 3] = params[3, j]
         p[-1] = params[4, 0]
         if n_feats == 1:
-            res = opt.minimize(calculate_likelihood_gmm, p, args=(tup_arg), method='SLSQP',
+            res = opt.minimize(calculate_likelihood_gmm, p, args=tup_arg, method='SLSQP',
                                options={'disp': False, 'maxiter': 600}, bounds=bnds)
         else:
-            res = opt.minimize(calculate_likelihood_gmmN, p, args=(tup_arg), method='SLSQP',
+            res = opt.minimize(calculate_likelihood_gmm_n, p, args=tup_arg, method='SLSQP',
                                options={'disp': False, 'maxiter': 600}, bounds=bnds)
         if max(np.isnan(res.x)) != 1:  # In case of convergence to a nan value
             p[:] = res.x[:]
@@ -170,7 +178,7 @@ def gmm(data, n_feats, params, bnds):
 
 
 def classify(data_4_classification, params):
-    from ebmtoolbox.mixture_model import calculate_prob_mmN
+    from ebmtoolbox.mixture_model import calculate_prob_mm_n
     from ebmtoolbox.mixture_model import calculate_prob_mm
     import numpy as np
 
@@ -179,7 +187,7 @@ def classify(data_4_classification, params):
         p_yes, p_no, likeli_pre, likeli_post = calculate_prob_mm(data_4_classification[:, :, 0], params,
                                                                  val_invalid=np.nan)
     else:
-        p_yes, p_no, likeli_pre, likeli_post = calculate_prob_mmN(data_4_classification, params, val_invalid=np.nan)
+        p_yes, p_no, likeli_pre, likeli_post = calculate_prob_mm_n(data_4_classification, params, val_invalid=np.nan)
 
     return p_yes, p_no, likeli_post, likeli_pre
 
@@ -213,13 +221,13 @@ def staging(pi0, event_centers, likeli_post, likeli_pre, type_staging):
     return subj_stages
 
 
-def adhoc(Data, params, n_startpoints, n_iterations, mix):
+def adhoc(data, params, n_startpoints, n_iterations, mix):
     import numpy as np
     import copy
 
     from ebmtoolbox import mixture_model as mm
-    m1 = np.shape(Data)[1]
-    p_yes, p_no, likeli_pre_all, likeli_post_all = mm.calculate_prob_mm(Data, params)
+    m1 = np.shape(data)[1]
+    p_yes, p_no, likeli_pre_all, likeli_post_all = mm.calculate_prob_mm(data, params)
     ml_ordering_mat = np.zeros((n_startpoints, m1))
     samples_likelihood_mat = np.zeros(n_startpoints)
 
@@ -240,11 +248,11 @@ def adhoc(Data, params, n_startpoints, n_iterations, mix):
                 current_ordering[move_event_to] = temp
                 this_samples_ordering[i, :] = copy.copy(current_ordering)
 
-            S = this_samples_ordering[i, :]
-            this_samples_likelihood[i], p_prob_k, pk = objfn_likelihood(S, p_yes, p_no, mix)
-            if (i > 0):
+            s = this_samples_ordering[i, :]
+            this_samples_likelihood[i], p_prob_k, pk = objfn_likelihood(s, p_yes, p_no, mix)
+            if i > 0:
                 ratio = np.exp(this_samples_likelihood[i] - this_samples_likelihood[i - 1])
-                if (ratio < 1):
+                if ratio < 1:
                     this_samples_likelihood[i] = copy.copy(this_samples_likelihood[i - 1])
                     this_samples_ordering[i, :] = copy.copy(this_samples_ordering[i - 1, :])
 
@@ -275,7 +283,7 @@ def mcmc(data, params, n_mcmciterations, mix, n_startpoints, n_iterations):
     this_samples_ordering[0, :] = copy.copy(seq_init)
 
     for i in range(0, n_mcmciterations):
-        if (i > 0):
+        if i > 0:
             move_event_from = int(np.ceil(m1 * np.random.rand()) - 1)
             move_event_to = int(np.ceil(m1 * np.random.rand()) - 1)
             current_ordering = copy.copy(this_samples_ordering[i - 1, :])
@@ -284,11 +292,11 @@ def mcmc(data, params, n_mcmciterations, mix, n_startpoints, n_iterations):
             current_ordering[move_event_to] = temp
             this_samples_ordering[i, :] = copy.copy(current_ordering)
 
-        S = this_samples_ordering[i, :]
-        this_samples_likelihood[i], p_prob_k, pk = objfn_likelihood(S, p_yes, p_no, mix)
-        if (i > 0):
+        s = this_samples_ordering[i, :]
+        this_samples_likelihood[i], p_prob_k, pk = objfn_likelihood(s, p_yes, p_no, mix)
+        if i > 0:
             ratio = np.exp(this_samples_likelihood[i] - this_samples_likelihood[i - 1])
-            if (ratio < random.random()):
+            if ratio < random.random():
                 this_samples_likelihood[i] = copy.copy(this_samples_likelihood[i - 1])
                 this_samples_ordering[i, :] = copy.copy(this_samples_ordering[i - 1, :])
 
