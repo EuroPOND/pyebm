@@ -18,7 +18,7 @@ def fit(DataIn,MethodOptions=False,VerboseOptions=False,Factors=['Age','Sex','IC
     
     from collections import namedtuple
     import pandas as pd
-    ## Default Options for the function call
+    # Default Options for the function call
     
     DMO = namedtuple('DefaultMethodOptions',' MixtureModel Bootstrap PatientStaging NStartpoints Niterations N_MCMC')
     DVO = namedtuple('DefaultVerboseOptions','Distributions Ordering PlotOrder WriteBootstrapData PatientStaging')
@@ -26,7 +26,7 @@ def fit(DataIn,MethodOptions=False,VerboseOptions=False,Factors=['Age','Sex','IC
     DMO.NStartpoints=10; DMO.Niterations=1000; DMO.N_MCMC=10000;
     DVO.Distributions = 0; DVO.Ordering=0; DVO.PlotOrder=0; DVO.WriteBootstrapData=0; DVO.PatientStaging = 0;
     
-    ## Replacing the Default Options with Options given by the user
+    # Replacing the Default Options with Options given by the user
     if type(MethodOptions)!= bool:
         for fld in MethodOptions._fields:
             setattr(DMO,fld,getattr(MethodOptions, fld))
@@ -38,11 +38,11 @@ def fit(DataIn,MethodOptions=False,VerboseOptions=False,Factors=['Age','Sex','IC
     from ebmtoolbox import corealgo as ca
     from ebmtoolbox import util
     from ebmtoolbox import weighted_mallows as wma
-    from ebmtoolbox import MixtureModel as mm
+    from ebmtoolbox import mixture_model as mm
     import numpy as np
     from sklearn.utils import resample
     
-    ## Data Preparation for DEBM
+    # Data Preparation for debm
     pdData_all,UniqueSubjIDs = util.pdReadData(DataIn, 0, Labels=Labels)
     pdDataTest_all,UniqueTestSubjIDs = util.pdReadData(DataTest, 0, Labels=Labels)
     pdData_all,pdDataTest_all,BiomarkersList= util.CorrectConfounders(pdData_all, pdDataTest_all, Factors)
@@ -59,7 +59,7 @@ def fit(DataIn,MethodOptions=False,VerboseOptions=False,Factors=['Age','Sex','IC
     idx_MCI=np.where(idx_MCI); idx_MCI = idx_MCI[0];
     data_AD_raw = Data_all[idx_AD,:,:]; data_CN_raw = Data_all[idx_CN,:,:]; data_MCI_raw=Data_all[idx_MCI,:,:]
     ptid_AD_raw = pdData_all.loc[idx_AD,'PTID']; ptid_CN_raw = pdData_all.loc[idx_CN,'PTID']; ptid_MCI_raw = pdData_all.loc[idx_MCI,'PTID']
-    ## Data Preparation for Bootstrapping
+    # Data Preparation for Bootstrapping
     pi0_all=[]; data_AD_raw_list=[]; params_opt_all=[]; event_centers_all=[];
     data_CN_raw_list = []; data_all_list = []; ptid_all_list=[]
     for i in range(DMO.Bootstrap):
@@ -90,15 +90,15 @@ def fit(DataIn,MethodOptions=False,VerboseOptions=False,Factors=['Age','Sex','IC
         data_all_list.append(Data_all)
         ptid_all_list.append(pdData_all['PTID'])
     SubjTrainAll = []; SubjTestAll = []
-    for i in range(len(data_AD_raw_list)): ## For each bootstrapped iteration
-        ## Reject possibly wrongly labeled data 
+    for i in range(len(data_AD_raw_list)): # For each bootstrapped iteration
+        # Reject possibly wrongly labeled data
         if len(data_AD_raw_list)>1:
             print([i]),
         data_AD_raw = data_AD_raw_list[i];
         data_CN_raw = data_CN_raw_list[i];
         Data_all =  data_all_list[i];                             
         Data_AD_pruned,Data_CN_pruned,params_raw,params_pruned=ca.Reject(data_AD_raw,data_CN_raw);
-        ## Bias Correction to get an unbiased estimate                                                        
+        # Bias Correction to get an unbiased estimate
         if DMO.MixtureModel=='vv2':
             params_opt = params_pruned
             mixes_old=params_opt[:,4,0]; flag_stop = 0;
@@ -114,9 +114,9 @@ def fit(DataIn,MethodOptions=False,VerboseOptions=False,Factors=['Age','Sex','IC
         elif DMO.MixtureModel=='ay':
             params_opt=mm.GMM_AY(Data_all,data_AD_raw,data_CN_raw)
 
-        ## Get Posterior Probabilities                                       
+        # Get Posterior Probabilities
         p_yes,p_no,likeli_post,likeli_pre=ca.Classify(Data_all,params_opt);                                                  
-        ## Probabilistic Kendall's Tau based Generalized Mallows Model                                                
+        # Probabilistic Kendall's Tau based Generalized Mallows Model
         mix = np.copy(params_opt[:,4,0]);
         params_opt[:,4,0]=0.5;
         pi0,event_centers=ca.MCMC(Data_all[:,:,0],params_opt,DMO.N_MCMC,params_opt[:,4,0],DMO.NStartpoints,DMO.Niterations);    
@@ -166,7 +166,7 @@ def fit(DataIn,MethodOptions=False,VerboseOptions=False,Factors=['Age','Sex','IC
             SubjTest['Stages'] = subj_stages_test
         SubjTestAll.append(SubjTest)
         SubjTrainAll.append(SubjTrain)
-    ## Get Mean Ordering of all the bootstrapped iterations.
+    # Get Mean Ordering of all the bootstrapped iterations.
     if len(data_AD_raw_list)>1:
         wts=np.arange(num_events,0,-1)
         wts_all=np.tile(wts,(len(data_AD_raw_list),1)).tolist()
@@ -179,7 +179,7 @@ def fit(DataIn,MethodOptions=False,VerboseOptions=False,Factors=['Age','Sex','IC
     ModelOutput.EventCenters = event_centers_all; ModelOutput.CentralOrderings=pi0_all;
     ModelOutput.BiomarkerParameters = params_opt_all
     
-    ## Visualize Results
+    # Visualize Results
     if DVO.Ordering==1:
         util.VisualizeOrdering(BiomarkersList, pi0_all, pi0_mean, DVO.PlotOrder);
     if DVO.Distributions==1:

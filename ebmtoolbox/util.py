@@ -89,7 +89,7 @@ def CorrectConfounders(DataTrain,DataTest,Factors=['Age','Sex','ICV'],flag_corre
         if len(DataTest)>0:
             DataTest = DataTest.drop(Factors,axis=1)
     else:
-        ## Change categorical value to numerical value
+        # Change categorical value to numerical value
         if len(DataTest)==0:
             flag_test=0;
             DataTest=DataTrain.copy()
@@ -109,7 +109,7 @@ def CorrectConfounders(DataTrain,DataTest,Factors=['Age','Sex','ICV'],flag_corre
                 else:
                     DataTest = Data.copy()
         
-        ## Separate the list of biomarkers from confounders and meta data
+        # Separate the list of biomarkers from confounders and meta data
         count=-1;
         for Data in [DataTrain,DataTest]:
             count=count+1;
@@ -127,7 +127,7 @@ def CorrectConfounders(DataTrain,DataTest,Factors=['Age','Sex','ICV'],flag_corre
             
             for i in range(len(BiomarkersList)):
                 Data=Data.rename(columns={BiomarkersList[i]:BiomarkersListnew[i]})
-            ## Contruct the formula for regression. Also compute the mean value of the confounding factors for correction
+            # Contruct the formula for regression. Also compute the mean value of the confounding factors for correction
             if count==0: # Do it only for training set
                 str_confounders=''
                 mean_confval = np.zeros(len(Factors))
@@ -136,14 +136,14 @@ def CorrectConfounders(DataTrain,DataTest,Factors=['Age','Sex','ICV'],flag_corre
                     mean_confval[j]=np.nanmean(Data[Factors[j]].values)
                 str_confounders=str_confounders[1:]
             
-                ## Multiple linear regression
+                # Multiple linear regression
                 betalist=[]
                 for i in range(len(BiomarkersList)):
                     str_formula = BiomarkersListnew[i] + '~' + str_confounders
                     result = sm.ols(formula=str_formula, data=Data).fit()
                     betalist.append(result.params)
             
-            ## Correction for the confounding factors
+            # Correction for the confounding factors
             Deviation=(Data[Factors] - mean_confval)
             Deviation[np.isnan(Deviation)]=0
             for i in range(len(BiomarkersList)):
@@ -165,7 +165,7 @@ def CorrectConfounders(DataTrain,DataTest,Factors=['Age','Sex','ICV'],flag_corre
     return DataTrain,DataTest,BiomarkersList
 
 def pd2mat(pdData,BiomarkersList,flag_JointFit):
-    # Convert arrays from pandas dataframe format to the matrices (which are used in DEBM algorithms)
+    # Convert arrays from pandas dataframe format to the matrices (which are used in debm algorithms)
     import numpy as np
     num_events = len(BiomarkersList);
     if flag_JointFit==0:

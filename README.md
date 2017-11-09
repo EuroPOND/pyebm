@@ -2,8 +2,8 @@
 
 The event-based model (EBM) for data-driven disease progression modeling estimates the sequence in which biomarkers for a disease become abnormal. This helps in understanding the dynamics of disease progression and facilitates early diagnosis by staging patients on a disease progression timeline. A more accurate and scalable EBM algorithm (Discriminative EBM) was introduced in [2]. 
 
-Call EBM.Control to find the central ordering in a few biomarkers using method [1]
-Call DEBM.Control to find the central ordering in a few biomarkers using method [2]
+Call ebm.Control to find the central ordering in a few biomarkers using method [1]
+Call debm.Control to find the central ordering in a few biomarkers using method [2]
 
 EBM and its variants typically consists of 2 steps. 
 

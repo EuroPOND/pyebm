@@ -13,50 +13,65 @@
 # *
 # *=========================================================================*/
 
-## Simplest function call (with default parameters)
+# Simplest function call (with default parameters)
 from __future__ import print_function
 
-from ebmtoolbox import EBM
+from ebmtoolbox import ebm
 
-ModelOutput,SubjTrain,SubjTest= EBM.fit('ADNI_7.csv')
+ModelOutput, SubjTrain, SubjTest = ebm.fit('ADNI_7.csv')
 print([ModelOutput.BiomarkerList[x] for x in ModelOutput.MeanCentralOrdering])
 
-## Example with Visual Biomarker Distributions as output
+# Example with Visual Biomarker Distributions as output
 
 from collections import namedtuple
-MO = namedtuple('MethodOptions','MixtureModel Bootstrap')
-MO.Bootstrap=0; MO.MixtureModel='vv2';
-VO = namedtuple('VerboseOptions','Distributions')
-VO.Distributions=1; 
-ModelOutput,SubjTrain,SubjTest= EBM.fit('ADNI_7.csv', MethodOptions=MO, VerboseOptions=VO)
 
-## Example with bootstrapping and visual output
+MO = namedtuple('MethodOptions', 'MixtureModel Bootstrap')
+MO.Bootstrap = 0
+MO.MixtureModel = 'vv2'
+VO = namedtuple('VerboseOptions', 'Distributions')
+VO.Distributions = 1
+ModelOutput, SubjTrain, SubjTest = ebm.fit('ADNI_7.csv', MethodOptions=MO, VerboseOptions=VO)
+
+# Example with bootstrapping and visual output
 
 from collections import namedtuple
-MO = namedtuple('MethodOptions','MixtureModel Bootstrap')
-MO.Bootstrap=5; MO.MixtureModel='vv2';
-VO = namedtuple('VerboseOptions','Ordering PlotOrder Distributions')
-VO.Ordering=1; VO.PlotOrder=1; VO.Distributions=0; 
-ModelOutput,SubjTrain,SubjTest= EBM.fit('ADNI_7.csv', MethodOptions=MO, VerboseOptions=VO)
+
+MO = namedtuple('MethodOptions', 'MixtureModel Bootstrap')
+MO.Bootstrap = 5
+MO.MixtureModel = 'vv2'
+VO = namedtuple('VerboseOptions', 'Ordering PlotOrder Distributions')
+VO.Ordering = 1
+VO.PlotOrder = 1
+VO.Distributions = 0
+ModelOutput, SubjTrain, SubjTest = ebm.fit('ADNI_7.csv', MethodOptions=MO, VerboseOptions=VO)
 
 print([ModelOutput.BiomarkerList[x] for x in ModelOutput.MeanCentralOrdering])
 
-## Example with Patient Staging and visual output. Also, a pandas dataframe can be sent as an input instead of CSV
+# Example with Patient Staging and visual output. Also, a pandas dataframe can be sent as an input instead of CSV
 from collections import namedtuple
-MO = namedtuple('MethodOptions','MixtureModel Bootstrap PatientStaging')
-MO.Bootstrap=0; MO.MixtureModel='vv2'; MO.PatientStaging=['ml','l']
-VO = namedtuple('VerboseOptions','Distributions PatientStaging')
-VO.PatientStaging=1; VO.Distributions=0; 
-import pandas as pd
-D=pd.read_csv('ADNI_7.csv')
-ModelOutput,SubjTrain,SubjTest= EBM.fit(D, MethodOptions=MO, VerboseOptions=VO)
 
+MO = namedtuple('MethodOptions', 'MixtureModel Bootstrap PatientStaging')
+MO.Bootstrap = 0
+MO.MixtureModel = 'vv2'
+MO.PatientStaging = ['ml', 'l']
+VO = namedtuple('VerboseOptions', 'Distributions PatientStaging')
+VO.PatientStaging = 1
+VO.Distributions = 0
+import pandas as pd
+
+D = pd.read_csv('ADNI_7.csv')
+ModelOutput, SubjTrain, SubjTest = ebm.fit(D, MethodOptions=MO, VerboseOptions=VO)
 
 from collections import namedtuple
-MO = namedtuple('MethodOptions','MixtureModel Bootstrap PatientStaging')
-MO.Bootstrap=0; MO.MixtureModel='vv1'; MO.PatientStaging=['exp','p']
-VO = namedtuple('VerboseOptions','Distributions PatientStaging')
-VO.PatientStaging=1; VO.Distributions=0; 
+
+MO = namedtuple('MethodOptions', 'MixtureModel Bootstrap PatientStaging')
+MO.Bootstrap = 0
+MO.MixtureModel = 'vv1'
+MO.PatientStaging = ['exp', 'p']
+VO = namedtuple('VerboseOptions', 'Distributions PatientStaging')
+VO.PatientStaging = 1
+VO.Distributions = 0
 import pandas as pd
-D=pd.read_csv('ADNI_7.csv')
-ModelOutput,SubjTrain,SubjTest= EBM.fit(D, MethodOptions=MO, VerboseOptions=VO)
+
+D = pd.read_csv('ADNI_7.csv')
+ModelOutput, SubjTrain, SubjTest = ebm.fit(D, MethodOptions=MO, VerboseOptions=VO)
