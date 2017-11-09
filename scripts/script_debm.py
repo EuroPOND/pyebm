@@ -31,7 +31,7 @@ MO.Bootstrap = 0
 MO.MixtureModel = 'vv2'
 VO = namedtuple('VerboseOptions', 'Distributions')
 VO.Distributions = 1
-ModelOutput, SubjTrain, SubjTest = debm.fit(adni_csv, MethodOptions=MO, VerboseOptions=VO)
+ModelOutput, SubjTrain, SubjTest = debm.fit(adni_csv, method_options=MO, verbose_options=VO)
 
 # Example with bootstrapping and visual output
 
@@ -44,7 +44,7 @@ VO = namedtuple('VerboseOptions', 'Ordering PlotOrder Distributions')
 VO.Ordering = 1
 VO.PlotOrder = 1
 VO.Distributions = 0
-ModelOutput, SubjTrain, SubjTest = debm.fit(adni_csv, MethodOptions=MO, VerboseOptions=VO)
+ModelOutput, SubjTrain, SubjTest = debm.fit(adni_csv, method_options=MO, verbose_options=VO)
 
 print([ModelOutput.BiomarkerList[x] for x in ModelOutput.MeanCentralOrdering])
 
@@ -61,7 +61,7 @@ VO.Distributions = 0
 import pandas as pd
 
 D = pd.read_csv(adni_csv)
-ModelOutput, SubjTrain, SubjTest = debm.fit(D, MethodOptions=MO, VerboseOptions=VO)
+ModelOutput, SubjTrain, SubjTest = debm.fit(D, method_options=MO, verbose_options=VO)
 
 from collections import namedtuple
 
@@ -75,7 +75,7 @@ VO.Distributions = 0
 import pandas as pd
 
 D = pd.read_csv(adni_csv)
-ModelOutput, SubjTrain, SubjTest = debm.fit(D, MethodOptions=MO, VerboseOptions=VO)
+ModelOutput, SubjTrain, SubjTest = debm.fit(D, method_options=MO, verbose_options=VO)
 
 # Comparing AUCs of Patient Staging using Cross-Validation with Training and Testset
 # Comparison will be done between debm / ebm / SVM
@@ -119,8 +119,8 @@ for train_index, test_index in skf.split(D, pd.to_numeric(Y.values)):
     count = count + 1
     print([count])
     DTrain, DTest = D.iloc[train_index], D.iloc[test_index]
-    ModelOutput1, SubjTrain1, SubjTest1 = debm.fit(DTrain, MethodOptions=MO1, VerboseOptions=VO, DataTest=DTest)
-    ModelOutput2, SubjTrain2, SubjTest2 = ebm.fit(DTrain, MethodOptions=MO2, VerboseOptions=VO, DataTest=DTest)
+    ModelOutput1, SubjTrain1, SubjTest1 = debm.fit(DTrain, method_options=MO1, verbose_options=VO, data_test=DTest)
+    ModelOutput2, SubjTrain2, SubjTest2 = ebm.fit(DTrain, method_options=MO2, verbose_options=VO, data_test=DTest)
     Y = DTest['Diagnosis']
     idx = Y != 'MCI'
     Y = Y[idx]

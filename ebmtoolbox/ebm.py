@@ -14,26 +14,48 @@
 # *=========================================================================*/
 from __future__ import print_function
 
-def fit(DataIn,MethodOptions=False,VerboseOptions=False,Factors=['Age','Sex','ICV'],Labels=['CN','MCI','AD'],DataTest=[]):
-    
+
+def fit(data_in,
+        method_options=False,
+        verbose_options=False,
+        factors=None,
+        labels=None,
+        data_test=None):
+    if factors is None:
+        factors = ['Age', 'Sex', 'ICV']
+    if labels is None:
+        labels = ['CN', 'MCI', 'AD']
+    if data_test is None:
+        data_test = []
     from collections import namedtuple
     import pandas as pd
     # Default Options for the function call
-    
-    DMO = namedtuple('DefaultMethodOptions',' MixtureModel Bootstrap PatientStaging NStartpoints Niterations N_MCMC')
-    DVO = namedtuple('DefaultVerboseOptions','Distributions Ordering PlotOrder WriteBootstrapData PatientStaging')
-    DMO.JointFit=0; DMO.MixtureModel='vv2'; DMO.Bootstrap=0; DMO.PatientStaging=['exp','p']; 
-    DMO.NStartpoints=10; DMO.Niterations=1000; DMO.N_MCMC=10000;
-    DVO.Distributions = 0; DVO.Ordering=0; DVO.PlotOrder=0; DVO.WriteBootstrapData=0; DVO.PatientStaging = 0;
-    
+
+    default_method_options = namedtuple('DefaultMethodOptions',
+                                        ' MixtureModel Bootstrap PatientStaging NStartpoints Niterations N_MCMC')
+    default_verbose_options = namedtuple('DefaultVerboseOptions',
+                                         'Distributions Ordering PlotOrder WriteBootstrapData PatientStaging')
+    default_method_options.JointFit = 0
+    default_method_options.MixtureModel = 'vv2'
+    default_method_options.Bootstrap = 0
+    default_method_options.PatientStaging = ['exp', 'p']
+    default_method_options.NStartpoints = 10
+    default_method_options.Niterations = 1000
+    default_method_options.N_MCMC = 10000
+    default_verbose_options.Distributions = 0
+    default_verbose_options.Ordering = 0
+    default_verbose_options.PlotOrder = 0
+    default_verbose_options.WriteBootstrapData = 0
+    default_verbose_options.PatientStaging = 0
+
     # Replacing the Default Options with Options given by the user
-    if type(MethodOptions)!= bool:
-        for fld in MethodOptions._fields:
-            setattr(DMO,fld,getattr(MethodOptions, fld))
-    
-    if type(VerboseOptions)!= bool:
-        for fld in VerboseOptions._fields:
-            setattr(DVO,fld,getattr(VerboseOptions, fld))
+    if type(method_options) != bool:
+        for fld in method_options._fields:
+            setattr(default_method_options, fld, getattr(method_options, fld))
+
+    if type(verbose_options) != bool:
+        for fld in verbose_options._fields:
+            setattr(default_verbose_options, fld, getattr(verbose_options, fld))
 
     from ebmtoolbox import corealgo as ca
     from ebmtoolbox import util
@@ -41,154 +63,177 @@ def fit(DataIn,MethodOptions=False,VerboseOptions=False,Factors=['Age','Sex','IC
     from ebmtoolbox import mixture_model as mm
     import numpy as np
     from sklearn.utils import resample
-    
-    # Data Preparation for debm
-    pdData_all,UniqueSubjIDs = util.pdReadData(DataIn, 0, Labels=Labels)
-    pdDataTest_all,UniqueTestSubjIDs = util.pdReadData(DataTest, 0, Labels=Labels)
-    pdData_all,pdDataTest_all,BiomarkersList= util.CorrectConfounders(pdData_all, pdDataTest_all, Factors)
 
-    num_events=len(BiomarkersList);
-    idx_CN=pdData_all['Diagnosis']==1; idx_AD=pdData_all['Diagnosis']==3; idx_MCI=pdData_all['Diagnosis']==2;
-    Data_all= util.pd2mat(pdData_all, BiomarkersList, 0)
-    if len(pdDataTest_all)>0:
-        Data_test_all= util.pd2mat(pdDataTest_all, BiomarkersList, 0)
+    # Data Preparation for debm
+    pd_data_all, unique_subj_ids = util.pdReadData(data_in, 0, Labels=labels)
+    pd_data_test_all, unique_test_subj_ids = util.pdReadData(data_test, 0, Labels=labels)
+    pd_data_all, pd_data_test_all, biomarkers_list = util.CorrectConfounders(pd_data_all, pd_data_test_all, factors)
+
+    num_events = len(biomarkers_list)
+    idx_cn = pd_data_all['Diagnosis'] == 1
+    idx_ad = pd_data_all['Diagnosis'] == 3
+    idx_mci = pd_data_all['Diagnosis'] == 2
+    data_all = util.pd2mat(pd_data_all, biomarkers_list, 0)
+    if len(pd_data_test_all) > 0:
+        data_test_all = util.pd2mat(pd_data_test_all, biomarkers_list, 0)
     else:
-        Data_test_all=[]
-    idx_CN=np.where(idx_CN); idx_CN = idx_CN[0];
-    idx_AD=np.where(idx_AD); idx_AD = idx_AD[0];
-    idx_MCI=np.where(idx_MCI); idx_MCI = idx_MCI[0];
-    data_AD_raw = Data_all[idx_AD,:,:]; data_CN_raw = Data_all[idx_CN,:,:]; data_MCI_raw=Data_all[idx_MCI,:,:]
-    ptid_AD_raw = pdData_all.loc[idx_AD,'PTID']; ptid_CN_raw = pdData_all.loc[idx_CN,'PTID']; ptid_MCI_raw = pdData_all.loc[idx_MCI,'PTID']
+        data_test_all = []
+    idx_cn = np.where(idx_cn)
+    idx_cn = idx_cn[0]
+    idx_ad = np.where(idx_ad)
+    idx_ad = idx_ad[0]
+    idx_mci = np.where(idx_mci)
+    idx_mci = idx_mci[0]
+    data_ad_raw = data_all[idx_ad, :, :]
+    data_cn_raw = data_all[idx_cn, :, :]
+    data_mci_raw = data_all[idx_mci, :, :]
+    ptid_ad_raw = pd_data_all.loc[idx_ad, 'PTID']
+    ptid_cn_raw = pd_data_all.loc[idx_cn, 'PTID']
+    ptid_mci_raw = pd_data_all.loc[idx_mci, 'PTID']
     # Data Preparation for Bootstrapping
-    pi0_all=[]; data_AD_raw_list=[]; params_opt_all=[]; event_centers_all=[];
-    data_CN_raw_list = []; data_all_list = []; ptid_all_list=[]
-    for i in range(DMO.Bootstrap):
-        bs_data_AD_raw=resample(data_AD_raw,random_state=i);
-        bs_ptid_AD_raw=resample(ptid_AD_raw,random_state=i);
-        bs_data_CN_raw=resample(data_CN_raw,random_state=i);
-        bs_ptid_CN_raw=resample(ptid_CN_raw,random_state=i);
-        bs_data_MCI_raw=resample(data_MCI_raw,random_state=i);
-        bs_ptid_MCI_raw=resample(ptid_MCI_raw,random_state=i);                        
-        bs_data_all=np.concatenate((bs_data_AD_raw,bs_data_CN_raw,bs_data_MCI_raw))  
-        bs_ptid_all=np.concatenate((bs_ptid_AD_raw,bs_ptid_CN_raw,bs_ptid_MCI_raw))  
-        labels_AD = np.zeros(len(bs_data_AD_raw))+3
-        labels_CN = np.zeros(len(bs_data_CN_raw))+1
-        labels_MCI = np.zeros(len(bs_data_MCI_raw))+2
-        labels_all=np.concatenate((labels_AD,labels_CN,labels_MCI))
-        if type(DVO.WriteBootstrapData)==str:
-            str_out=DVO.WriteBootstrapData+'_'+str(i)+'.csv'
-            Dbs=pd.DataFrame(bs_data_all[:,:,0],columns=BiomarkersList)
-            Dbs['Diagnosis']=labels_all
-            Dbs.to_csv(str_out,index=False)
-        data_AD_raw_list.append(bs_data_AD_raw)
-        data_CN_raw_list.append(bs_data_CN_raw)
+    pi0_all = []
+    data_ad_raw_list = []
+    params_opt_all = []
+    event_centers_all = []
+    data_cn_raw_list = []
+    data_all_list = []
+    ptid_all_list = []
+    for i in range(default_method_options.Bootstrap):
+        bs_data_ad_raw = resample(data_ad_raw, random_state=i)
+        bs_ptid_ad_raw = resample(ptid_ad_raw, random_state=i)
+        bs_data_cn_raw = resample(data_cn_raw, random_state=i)
+        bs_ptid_cn_raw = resample(ptid_cn_raw, random_state=i)
+        bs_data_mci_raw = resample(data_mci_raw, random_state=i)
+        bs_ptid_mci_raw = resample(ptid_mci_raw, random_state=i)
+        bs_data_all = np.concatenate((bs_data_ad_raw, bs_data_cn_raw, bs_data_mci_raw))
+        bs_ptid_all = np.concatenate((bs_ptid_ad_raw, bs_ptid_cn_raw, bs_ptid_mci_raw))
+        labels_ad = np.zeros(len(bs_data_ad_raw)) + 3
+        labels_cn = np.zeros(len(bs_data_cn_raw)) + 1
+        labels_mci = np.zeros(len(bs_data_mci_raw)) + 2
+        labels_all = np.concatenate((labels_ad, labels_cn, labels_mci))
+        if type(default_verbose_options.WriteBootstrapData) == str:
+            str_out = '%s_%s.csv' % (default_verbose_options.WriteBootstrapData, i)
+            dbs = pd.DataFrame(bs_data_all[:, :, 0], columns=biomarkers_list)
+            dbs['Diagnosis'] = labels_all
+            dbs.to_csv(str_out, index=False)
+        data_ad_raw_list.append(bs_data_ad_raw)
+        data_cn_raw_list.append(bs_data_cn_raw)
         data_all_list.append(bs_data_all)
         ptid_all_list.append(bs_ptid_all)
-    if DMO.Bootstrap==False:
-        data_AD_raw_list.append(data_AD_raw)
-        data_CN_raw_list.append(data_CN_raw)
-        data_all_list.append(Data_all)
-        ptid_all_list.append(pdData_all['PTID'])
-    SubjTrainAll = []; SubjTestAll = []
-    for i in range(len(data_AD_raw_list)): # For each bootstrapped iteration
+    if default_method_options.Bootstrap == False:
+        data_ad_raw_list.append(data_ad_raw)
+        data_cn_raw_list.append(data_cn_raw)
+        data_all_list.append(data_all)
+        ptid_all_list.append(pd_data_all['PTID'])
+    subj_train_all = []
+    subj_test_all = []
+    for i in range(len(data_ad_raw_list)):  # For each bootstrapped iteration
         # Reject possibly wrongly labeled data
-        if len(data_AD_raw_list)>1:
+        if len(data_ad_raw_list) > 1:
             print([i]),
-        data_AD_raw = data_AD_raw_list[i];
-        data_CN_raw = data_CN_raw_list[i];
-        Data_all =  data_all_list[i];                             
-        Data_AD_pruned,Data_CN_pruned,params_raw,params_pruned=ca.Reject(data_AD_raw,data_CN_raw);
+        data_ad_raw = data_ad_raw_list[i]
+        data_cn_raw = data_cn_raw_list[i]
+        data_all = data_all_list[i]
+        data_ad_pruned, data_cn_pruned, params_raw, params_pruned = ca.reject(data_ad_raw, data_cn_raw)
         # Bias Correction to get an unbiased estimate
-        if DMO.MixtureModel=='vv2':
+        if default_method_options.MixtureModel == 'vv2':
             params_opt = params_pruned
-            mixes_old=params_opt[:,4,0]; flag_stop = 0;
-            while flag_stop==0:
-                params_optmix,bnds_all = ca.GMM_Control(Data_all,Data_CN_pruned,Data_AD_pruned,params_opt,itvl=0.001);
-                params_opt,bnds_all=ca.GMM_Control(Data_all,Data_CN_pruned,Data_AD_pruned,params_optmix,type_opt=3,params_pruned=params_pruned);
-                mixes = params_opt[:,4,0]
-                if np.mean(np.abs(mixes-mixes_old))<10**-2:
-                    flag_stop=1;
+            mixes_old = params_opt[:, 4, 0]
+            flag_stop = 0
+            while flag_stop == 0:
+                params_optmix, bnds_all = ca.gmm_control(data_all, data_cn_pruned, data_ad_pruned, params_opt,
+                                                         itvl=0.001)
+                params_opt, bnds_all = ca.gmm_control(data_all, data_cn_pruned, data_ad_pruned, params_optmix,
+                                                      type_opt=3, params_pruned=params_pruned)
+                mixes = params_opt[:, 4, 0]
+                if np.mean(np.abs(mixes - mixes_old)) < 10 ** -2:
+                    flag_stop = 1
                 mixes_old = np.copy(mixes)
-        elif DMO.MixtureModel=='vv1':
-            params_opt,bnds_all = ca.GMM_Control(Data_all,Data_CN_pruned,Data_AD_pruned,params_pruned,type_opt=1);
-        elif DMO.MixtureModel=='ay':
-            params_opt=mm.GMM_AY(Data_all,data_AD_raw,data_CN_raw)
+        elif default_method_options.MixtureModel == 'vv1':
+            params_opt, bnds_all = ca.gmm_control(data_all, data_cn_pruned, data_ad_pruned, params_pruned, type_opt=1)
+        elif default_method_options.MixtureModel == 'ay':
+            params_opt = mm.gmm_ay(data_all, data_ad_raw, data_cn_raw)
 
         # Get Posterior Probabilities
-        p_yes,p_no,likeli_post,likeli_pre=ca.Classify(Data_all,params_opt);                                                  
+        p_yes, p_no, likeli_post, likeli_pre = ca.classify(data_all, params_opt)
         # Probabilistic Kendall's Tau based Generalized Mallows Model
-        mix = np.copy(params_opt[:,4,0]);
-        params_opt[:,4,0]=0.5;
-        pi0,event_centers=ca.MCMC(Data_all[:,:,0],params_opt,DMO.N_MCMC,params_opt[:,4,0],DMO.NStartpoints,DMO.Niterations);    
-        params_opt[:,4,0]=mix
+        mix = np.copy(params_opt[:, 4, 0])
+        params_opt[:, 4, 0] = 0.5
+        pi0, event_centers = ca.mcmc(data_all[:, :, 0], params_opt, default_method_options.N_MCMC, params_opt[:, 4, 0],
+                                     default_method_options.NStartpoints,
+                                     default_method_options.Niterations)
+        params_opt[:, 4, 0] = mix
         event_centers_all.append(event_centers)
         for ni in range(num_events):
-            idx = np.isnan(p_yes[:,ni])
-            p_yes[idx,ni]=1-params_opt[ni,4,0]
-        
-        if DMO.PatientStaging[1]=='p':
-            Y = p_yes;
-            N = 1 - p_yes;
+            idx = np.isnan(p_yes[:, ni])
+            p_yes[idx, ni] = 1 - params_opt[ni, 4, 0]
+
+        if default_method_options.PatientStaging[1] == 'p':
+            y = p_yes
+            n = 1 - p_yes
         else:
-            Y = likeli_post;
-            N = likeli_pre;
-            
-        subj_stages=ca.Staging(pi0,event_centers,Y,N,DMO.PatientStaging);
-        if len(Data_test_all)>0:
-            p_yes_test,p_no_test,likeli_post_test,likeli_pre_test=ca.Classify(Data_test_all,params_opt);
+            y = likeli_post
+            n = likeli_pre
+
+        subj_stages = ca.staging(pi0, event_centers, y, n, default_method_options.PatientStaging)
+        if len(data_test_all) > 0:
+            p_yes_test, p_no_test, likeli_post_test, likeli_pre_test = ca.classify(data_test_all, params_opt)
             for ni in range(num_events):
-                idx = np.isnan(p_yes_test[:,ni])
-                p_yes_test[idx,ni]=1-params_opt[ni,4,0]
-            if DMO.PatientStaging[1]=='p':
-                Y = p_yes_test;
-                N = 1- p_yes_test;
+                idx = np.isnan(p_yes_test[:, ni])
+                p_yes_test[idx, ni] = 1 - params_opt[ni, 4, 0]
+            if default_method_options.PatientStaging[1] == 'p':
+                y = p_yes_test
+                n = 1 - p_yes_test
             else:
-                Y = likeli_post_test;
-                N = likeli_pre_test;
-            subj_stages_test=ca.Staging(pi0,event_centers,Y,N,DMO.PatientStaging);
+                y = likeli_post_test
+                n = likeli_pre_test
+            subj_stages_test = ca.staging(pi0, event_centers, y, n, default_method_options.PatientStaging)
         pi0_all.append(pi0)
         params_opt_all.append(params_opt)
         event_centers_all.append(event_centers)
-        SubjTrain=pd.DataFrame(columns=['PTID', 'Orderings','Weights','Stages'])
-        SubjTest=pd.DataFrame(columns=['PTID', 'Orderings','Weights','Stages'])
-        
-        SubjTrain['PTID'] = ptid_all_list[i]
-        so_list,weights_list = util.Prob2ListAndWeights(p_yes); 
-        SubjTrain['Orderings'] = so_list
-        SubjTrain['Weights'] = weights_list
-        SubjTrain['Stages'] = subj_stages
-    
-        if len(pdDataTest_all)>0:
-            so_list,weights_list = util.Prob2ListAndWeights(p_yes_test);
-            SubjTest['Weights'] = weights_list
-            SubjTest['Orderings'] = so_list                                               
-            SubjTest['PTID'] = pdDataTest_all['PTID']
-            SubjTest['Stages'] = subj_stages_test
-        SubjTestAll.append(SubjTest)
-        SubjTrainAll.append(SubjTrain)
-    # Get Mean Ordering of all the bootstrapped iterations.
-    if len(data_AD_raw_list)>1:
-        wts=np.arange(num_events,0,-1)
-        wts_all=np.tile(wts,(len(data_AD_raw_list),1)).tolist()
-        (pi0_mean,bestscore,scores) = wma.weighted_mallows.consensus(num_events,pi0_all,wts_all,[]);   
-    else:
-        pi0_mean=pi0_all[0]
-    
-    ModelOutput = namedtuple('ModelOutput','MeanCentralOrdering EventCenters CentralOrderings BiomarkerList BiomarkerParameters')
-    ModelOutput.BiomarkerList = BiomarkersList; ModelOutput.MeanCentralOrdering=pi0_mean;
-    ModelOutput.EventCenters = event_centers_all; ModelOutput.CentralOrderings=pi0_all;
-    ModelOutput.BiomarkerParameters = params_opt_all
-    
-    # Visualize Results
-    if DVO.Ordering==1:
-        util.VisualizeOrdering(BiomarkersList, pi0_all, pi0_mean, DVO.PlotOrder);
-    if DVO.Distributions==1:
-        params_all=[params_opt];
-        util.VisualizeBiomarkerDistribution(Data_all, params_all, BiomarkersList);
-    if DVO.PatientStaging==1:
-        util.VisualizeStaging(subj_stages, pdData_all['Diagnosis'], Labels)
-                                           
-    if DMO.Bootstrap==False:
-        pi0_all=pi0_all[0]
+        subj_train = pd.DataFrame(columns=['PTID', 'Orderings', 'Weights', 'Stages'])
+        subj_test = pd.DataFrame(columns=['PTID', 'Orderings', 'Weights', 'Stages'])
 
-    return ModelOutput,SubjTrainAll,SubjTestAll
+        subj_train['PTID'] = ptid_all_list[i]
+        so_list, weights_list = util.Prob2ListAndWeights(p_yes)
+        subj_train['Orderings'] = so_list
+        subj_train['Weights'] = weights_list
+        subj_train['Stages'] = subj_stages
+
+        if len(pd_data_test_all) > 0:
+            so_list, weights_list = util.Prob2ListAndWeights(p_yes_test)
+            subj_test['Weights'] = weights_list
+            subj_test['Orderings'] = so_list
+            subj_test['PTID'] = pd_data_test_all['PTID']
+            subj_test['Stages'] = subj_stages_test
+        subj_test_all.append(subj_test)
+        subj_train_all.append(subj_train)
+    # Get Mean Ordering of all the bootstrapped iterations.
+    if len(data_ad_raw_list) > 1:
+        wts = np.arange(num_events, 0, -1)
+        wts_all = np.tile(wts, (len(data_ad_raw_list), 1)).tolist()
+        (pi0_mean, bestscore, scores) = wma.weighted_mallows.consensus(num_events, pi0_all, wts_all, [])
+    else:
+        pi0_mean = pi0_all[0]
+
+    model_output = namedtuple('ModelOutput',
+                              'MeanCentralOrdering EventCenters CentralOrderings BiomarkerList BiomarkerParameters')
+    model_output.BiomarkerList = biomarkers_list
+    model_output.MeanCentralOrdering = pi0_mean
+    model_output.EventCenters = event_centers_all
+    model_output.CentralOrderings = pi0_all
+    model_output.BiomarkerParameters = params_opt_all
+
+    # Visualize Results
+    if default_verbose_options.Ordering == 1:
+        util.VisualizeOrdering(biomarkers_list, pi0_all, pi0_mean, default_verbose_options.PlotOrder)
+    if default_verbose_options.Distributions == 1:
+        params_all = [params_opt]
+        util.VisualizeBiomarkerDistribution(data_all, params_all, biomarkers_list)
+    if default_verbose_options.PatientStaging == 1:
+        util.VisualizeStaging(subj_stages, pd_data_all['Diagnosis'], labels)
+
+    if not default_method_options.Bootstrap:
+        pi0_all = pi0_all[0]
+
+    return model_output, subj_train_all, subj_test_all

@@ -16,15 +16,15 @@ This toolbox supports 3 different Gaussian mixture models.
 2. Algorithm proposed in [2] by Vikram Venkatraghavan et. al.
 3. Algorithm proposed in [4] by Vikram Venkatraghavan et. al.
 
-## Required Libraries
+# Required Libraries
 
 Python 2.7.x, numpy 1.11 or higher, pandas 0.20, sklearn 0.18, scipy 0.18, seaborn 0.7, statsmodels 0.8
 
-## Explanation of Inputs:
+# Explanation of Inputs:
 
-### DataIn:
+## DataIn:
  String to the CSV File where the data is stored. This can also be a Pandas dataframe with necessary data. The CSV file or the dataframe must contain the following fields: PTID (Patient ID), Diagnosis (Clinical Label), Biomarkers, Confounding Factors, EXAMDATE (Date of Examination). See ADNI_7.csv for example.
-### (optional) MethodOptions:
+## (optional) MethodOptions:
 Named Tuple with any or all of the following fields:
 
 *   MixtureModel - Choose the mixture model algorithm (Options: 'vv1'[2],'vv2'(default)[4], 'ay'[3]) 
@@ -33,7 +33,7 @@ Named Tuple with any or all of the following fields:
 *   PatientStaging - Choose the patient staging algorithm, with a two element list consisting of ['exp'/'ml','p'/'l']. The first element in the list chooses 'ml' for most likely stage[1,2,3] or 'exp' for expected stage[4]. The second element in the list chooses 'l' for likelihood[1,2,3] or 'p' for posterior probability[4].
 *   (Only in EBM.Control) NStartpoints, Niterations and N_MCMC are algorithm specific parameters for EBM method.
 
-### (optional) VerboseOptions:
+## (optional) VerboseOptions:
 Named Tuple with any or all of the following fields:
 
 *   Distributions - plots biomarker distributions [default - Turned Off]
@@ -42,16 +42,16 @@ Named Tuple with any or all of the following fields:
 *   WriteBootstrapData - String which specifies the location and name of the files to save the data used in different bootstrap iterations. [default - Turned Off]
 *   PatientStaging - plots the patient stages of subjects in different classes. [default - Turned Off]
 
-### (optional) Factors:
+## (optional) Factors:
 Confounding Factors used for correcting the biomarkers. By Default, it is Age, Sex, ICV (intra-cranial volume)
 
-### (optional) Labels:
+## (optional) Labels:
 Clinical list of labels in the dataset. By Default, it is CN, MCI, AD.
 
-### (optional) DataTest:
+## (optional) DataTest:
 If given, DataTest will be used as a test-set to evaluate the disease progression model obtained using DataIn.
 
-### References:
+## References:
 
 [1] Fonteijn, H.M., et. al., ‘[An event-based model for disease progression and its application in familial Alzheimer's disease and Huntington's disease](https://doi.org/10.1016/j.neuroimage.2012.01.062)’, NeuroImage 60(3), 1880–1889 (2012).
 
