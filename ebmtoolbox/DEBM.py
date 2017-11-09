@@ -32,24 +32,24 @@ def fit(DataIn,MethodOptions=False,VerboseOptions=False,Factors=['Age','Sex','IC
     if type(VerboseOptions)!= bool:
         for fld in VerboseOptions._fields:
             setattr(DVO,fld,getattr(VerboseOptions, fld))
-    
-    import corealgo as ca                 
-    import util
-    import weighted_mallows as wma
-    import MixtureModel as mm
+
+    from ebmtoolbox import corealgo as ca
+    from ebmtoolbox import util
+    from ebmtoolbox import weighted_mallows as wma
+    from ebmtoolbox import MixtureModel as mm
     import numpy as np
     from sklearn.utils import resample
     
     ## Data Preparation for DEBM
-    pdData_all,UniqueSubjIDs = util.pdReadData(DataIn,0,Labels=Labels)
-    pdDataTest_all,UniqueTestSubjIDs = util.pdReadData(DataTest,0,Labels=Labels)
-    pdData_all,pdDataTest_all,BiomarkersList= util.CorrectConfounders(pdData_all,pdDataTest_all,Factors)
+    pdData_all,UniqueSubjIDs = util.pdReadData(DataIn, 0, Labels=Labels)
+    pdDataTest_all,UniqueTestSubjIDs = util.pdReadData(DataTest, 0, Labels=Labels)
+    pdData_all,pdDataTest_all,BiomarkersList= util.CorrectConfounders(pdData_all, pdDataTest_all, Factors)
 
     num_events=len(BiomarkersList);
     idx_CN=pdData_all['Diagnosis'].values==1; idx_AD=pdData_all['Diagnosis'].values==3; idx_MCI=pdData_all['Diagnosis'].values==2;
-    Data_all=util.pd2mat(pdData_all,BiomarkersList,0)
+    Data_all= util.pd2mat(pdData_all, BiomarkersList, 0)
     if len(pdDataTest_all)>0:
-        Data_test_all=util.pd2mat(pdDataTest_all,BiomarkersList,0)
+        Data_test_all= util.pd2mat(pdDataTest_all, BiomarkersList, 0)
     else:
         Data_test_all=[]
     idx_CN=np.where(idx_CN); idx_CN = idx_CN[0];
@@ -175,12 +175,12 @@ def fit(DataIn,MethodOptions=False,VerboseOptions=False,Factors=['Age','Sex','IC
     
     ## Visualize Results
     if DVO.Ordering==1:
-        util.VisualizeOrdering(BiomarkersList, pi0_all,pi0_mean,DVO.PlotOrder);
+        util.VisualizeOrdering(BiomarkersList, pi0_all, pi0_mean, DVO.PlotOrder);
     if DVO.Distributions==1:
         params_all=[params_opt];
-        util.VisualizeBiomarkerDistribution(Data_all,params_all,BiomarkersList);
+        util.VisualizeBiomarkerDistribution(Data_all, params_all, BiomarkersList);
     if DVO.PatientStaging==1:
-        util.VisualizeStaging(subj_stages,pdData_all['Diagnosis'],Labels)
+        util.VisualizeStaging(subj_stages, pdData_all['Diagnosis'], Labels)
                                            
     if DMO.Bootstrap==False:
         pi0_all=pi0_all[0]

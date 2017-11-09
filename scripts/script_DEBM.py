@@ -16,7 +16,7 @@
 ## Simplest function call (with default parameters)
 from __future__ import print_function
 
-import DEBM
+from ebmtoolbox import DEBM, EBM
 
 ModelOutput, SubjTrain, SubjTest = DEBM.fit('ADNI_7.csv')
 print([ModelOutput.BiomarkerList[x] for x in ModelOutput.MeanCentralOrdering])
@@ -106,7 +106,6 @@ from sklearn.model_selection import KFold as KF
 from sklearn import metrics
 import sklearn.svm as svm
 import numpy as np
-import EBM
 
 skf = KF(n_splits=10, shuffle=True, random_state=42)
 print("Comparing the AUCs of CN / AD Classification:")

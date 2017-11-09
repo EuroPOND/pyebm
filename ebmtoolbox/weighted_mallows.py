@@ -13,9 +13,12 @@
 # *
 # *=========================================================================*/
 
-import util
-import numpy 
 import copy
+
+import numpy
+
+from ebmtoolbox import util
+
 
 class weighted_mallows:
     def __init__(self, phi, sigma0):
@@ -64,11 +67,11 @@ class weighted_mallows:
             scores = (n-1)*[0] 
             for i in range(n-1):
                 count=count+1;
-                sig = util.adjswap(sig0,i)
+                sig = util.adjswap(sig0, i)
                 sig_list[count]=sig
                 scores[i] = weighted_mallows.totalconsensus(sig,D,prob)
             bestidx = scores.index(min(scores))
-            bestsig = util.adjswap(sig0,bestidx)
+            bestsig = util.adjswap(sig0, bestidx)
             if bestscore > scores[bestidx]:
                 sig0 = bestsig[:]
                 bestscore = scores[bestidx] 
@@ -144,7 +147,7 @@ class weighted_mallows:
     def __kendall_alt(h,pi0,pi,prob):
         V = (len(pi)-1)*[0]
         piidx = util.perminv(list(pi))
-        pi0idx=util.perminv(list(pi0))
+        pi0idx= util.perminv(list(pi0))
         for i in range(0,len(pi)-1):
             for j in range(i+1,len(pi)):
                 m = (piidx[i] - piidx[j])*(pi0idx[i] - pi0idx[j])
@@ -156,7 +159,7 @@ class weighted_mallows:
     def __kendall_alt_ind(h,pi0,pi,prob):
         V = (len(pi)-1)*[0]
         piidx = util.perminv(list(pi))
-        pi0idx=util.perminv(list(pi0))
+        pi0idx= util.perminv(list(pi0))
         for i in range(0,len(pi)-1):
             for j in range(i+1,len(pi)):
                 m = (piidx[i] - piidx[j])*(pi0idx[i] - pi0idx[j])

@@ -18,8 +18,8 @@ from __future__ import print_function
 def Reject(data_AD,data_CN):
 
     import numpy as np
-    from MixtureModel import calculate_prob_mmN
-    from MixtureModel import calculate_prob_mm
+    from ebmtoolbox.MixtureModel import calculate_prob_mmN
+    from ebmtoolbox.MixtureModel import calculate_prob_mm
                   
     m=np.shape(data_AD)
     Data_AD=[]; Data_CN=[];
@@ -129,8 +129,8 @@ def GMM_Control(Data_all,Data_CN_pruned,Data_AD_pruned,params_nobias,type_opt=1,
     return params,bnds_all
 
 def GMM(Data,Nfeats,params,bnds):
-        from MixtureModel import calculate_likelihood_gmmN
-        from MixtureModel import calculate_likelihood_gmm
+        from ebmtoolbox.MixtureModel import calculate_likelihood_gmmN
+        from ebmtoolbox.MixtureModel import calculate_likelihood_gmm
         import scipy.optimize as opt
         import numpy as np
         idx = bnds[:,1]-bnds[:,0]<=0.001
@@ -163,8 +163,8 @@ def GMM(Data,Nfeats,params,bnds):
     
 def Classify(Data4Classification,params):
 
-    from MixtureModel import calculate_prob_mmN
-    from MixtureModel import calculate_prob_mm
+    from ebmtoolbox.MixtureModel import calculate_prob_mmN
+    from ebmtoolbox.MixtureModel import calculate_prob_mm
     import numpy as np
     
     Nfeats=Data4Classification.shape[2]
@@ -206,7 +206,7 @@ def adhoc(Data,params,n_startpoints,n_iterations,mix):
     import numpy as np
     import copy
 
-    import MixtureModel as mm
+    from ebmtoolbox import MixtureModel as mm
     m1=np.shape(Data)[1];           
     p_yes,p_no,likeli_pre_all,likeli_post_all=mm.calculate_prob_mm(Data,params);
     ml_ordering_mat = np.zeros((n_startpoints,m1));
@@ -252,8 +252,8 @@ def MCMC(Data,params,n_mcmciterations,mix,n_startpoints,n_iterations):
     import numpy as np
     import copy
     import random
-    
-    import MixtureModel as mm
+
+    from ebmtoolbox import MixtureModel as mm
     m1=np.shape(Data)[1];
     p_yes,p_no,likeli_pre_all,likeli_post_all=mm.calculate_prob_mm(Data,params);
     
