@@ -12,10 +12,19 @@
 # *  limitations under the License.
 # *
 # *=========================================================================*/
+import datetime
+import time
+
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import scipy.stats
+import seaborn as sns
+import statsmodels.formula.api as sm
+from matplotlib import rc
 
 
 def prob_2_list_and_weights(p_yes):
-    import numpy as np
     subjectwise_weights = []
     subjectwise_ordering = []
     for i in range(0, np.shape(p_yes)[0]):
@@ -44,8 +53,6 @@ def adjswap(pi, i):
 
 
 def pd_read_data(str_data, flag_joint_fit=False, labels=['CN', 'MCI', 'AD']):
-    import pandas as pd
-    import numpy as np
 
     if type(str_data) is str:
         data = pd.read_csv(str_data)
@@ -81,9 +88,6 @@ def pd_read_data(str_data, flag_joint_fit=False, labels=['CN', 'MCI', 'AD']):
 def correct_confounders(data_train, data_test, factors=None, flag_correct=1):
     if factors is None:
         factors = ['Age', 'Sex', 'ICV']
-    import statsmodels.formula.api as sm
-    import numpy as np
-    import pandas as pd
     flag_test = 1
     droplist = ['PTID', 'Diagnosis', 'EXAMDATE']
     if flag_correct == 0 or len(factors) == 0:
@@ -180,7 +184,6 @@ def correct_confounders(data_train, data_test, factors=None, flag_correct=1):
 
 def pd2mat(pd_data, biomarkers_list, flag_joint_fit):
     # Convert arrays from pandas dataframe format to the matrices (which are used in debm algorithms)
-    import numpy as np
     num_events = len(biomarkers_list)
     if flag_joint_fit == 0:
         num_feats = 1
@@ -192,10 +195,6 @@ def pd2mat(pd_data, biomarkers_list, flag_joint_fit):
 
 
 def exam_date_str2num(exam_date_series):
-    import datetime
-    import time
-    import pandas as pd
-    import numpy as np
     timestamp = np.zeros(len(exam_date_series))
     for i in range(len(exam_date_series)):
         stre = exam_date_series.values[i]
@@ -208,9 +207,6 @@ def exam_date_str2num(exam_date_series):
 
 
 def visualize_biomarker_distribution(data_all, params_all, biomarkers_list):
-    from matplotlib import pyplot as plt
-    import numpy as np
-    import scipy.stats
 
     m = np.shape(data_all)
     n = len(params_all)
@@ -274,10 +270,6 @@ def visualize_biomarker_distribution(data_all, params_all, biomarkers_list):
 
 
 def visualize_ordering(labels, pi0_all, pi0_mean, plotorder):
-    import pandas as pd
-    import seaborn as sns
-    import numpy as np
-    import matplotlib.pyplot as plt
     columns = ['Features', 'Event Position', 'Count']
     datapivot = pd.DataFrame(columns=columns)
     for i in range(len(labels)):
@@ -302,9 +294,6 @@ def visualize_ordering(labels, pi0_all, pi0_mean, plotorder):
 
 
 def visualize_staging(subj_stages, diagnosis, labels):
-    import numpy as np
-    import matplotlib.pyplot as plt
-    from matplotlib import rc
     if np.max(subj_stages) > 1:
         nb = np.max(subj_stages) + 2
         freq, binc = np.histogram(subj_stages, bins=np.arange(np.max(subj_stages) + 1.01))

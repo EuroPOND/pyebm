@@ -14,11 +14,21 @@
 # *=========================================================================*/
 from __future__ import print_function
 
+import copy
+import random
+
+import numpy as np
+import scipy.optimize as opt
+from numpy import matlib
+
+from ebmtoolbox import mixture_model as mm
+from ebmtoolbox.mixture_model import calculate_likelihood_gmm
+from ebmtoolbox.mixture_model import calculate_likelihood_gmm_n
+from ebmtoolbox.mixture_model import calculate_prob_mm
+from ebmtoolbox.mixture_model import calculate_prob_mm_n
+
 
 def reject(data_ad, data_cn):
-    import numpy as np
-    from ebmtoolbox.mixture_model import calculate_prob_mm_n
-    from ebmtoolbox.mixture_model import calculate_prob_mm
 
     m = np.shape(data_ad)
     data_ad_out = []
@@ -82,7 +92,6 @@ def gmm_control(data_all,
                 params_pruned=None):
     if params_pruned is None:
         params_pruned = []
-    import numpy as np
     n_events = len(data_cn_pruned)
     n_feats = data_cn_pruned[0].shape[1]
     params = np.zeros((n_events, 5, n_feats))
@@ -142,10 +151,6 @@ def gmm_control(data_all,
 
 
 def gmm(data, n_feats, params, bnds):
-    from ebmtoolbox.mixture_model import calculate_likelihood_gmm_n
-    from ebmtoolbox.mixture_model import calculate_likelihood_gmm
-    import scipy.optimize as opt
-    import numpy as np
     idx = bnds[:, 1] - bnds[:, 0] <= 0.001
     bnds[idx, 1] = bnds[idx, 0] + 0.001  # Upper bound should be greater
     tup_arg = (data, 0)
@@ -178,10 +183,6 @@ def gmm(data, n_feats, params, bnds):
 
 
 def classify(data_4_classification, params):
-    from ebmtoolbox.mixture_model import calculate_prob_mm_n
-    from ebmtoolbox.mixture_model import calculate_prob_mm
-    import numpy as np
-
     n_feats = data_4_classification.shape[2]
     if n_feats == 1:
         p_yes, p_no, likeli_pre, likeli_post = calculate_prob_mm(data_4_classification[:, :, 0], params,
@@ -193,8 +194,6 @@ def classify(data_4_classification, params):
 
 
 def staging(pi0, event_centers, likeli_post, likeli_pre, type_staging):
-    import numpy as np
-    from numpy import matlib
 
     l_yes = np.divide(likeli_post, likeli_post + likeli_pre + 1e-100)
     l_no = 1 - l_yes
@@ -222,10 +221,7 @@ def staging(pi0, event_centers, likeli_post, likeli_pre, type_staging):
 
 
 def adhoc(data, params, n_startpoints, n_iterations, mix):
-    import numpy as np
-    import copy
 
-    from ebmtoolbox import mixture_model as mm
     m1 = np.shape(data)[1]
     p_yes, p_no, likeli_pre_all, likeli_post_all = mm.calculate_prob_mm(data, params)
     ml_ordering_mat = np.zeros((n_startpoints, m1))
@@ -239,7 +235,7 @@ def adhoc(data, params, n_startpoints, n_iterations, mix):
         this_samples_ordering[0, :] = seq_init
 
         for i in range(0, n_iterations):
-            if (i > 0):
+            if i > 0:
                 move_event_from = int(np.ceil(m1 * np.random.rand()) - 1)
                 move_event_to = int(np.ceil(m1 * np.random.rand()) - 1)
                 current_ordering = copy.copy(this_samples_ordering[i - 1, :])
@@ -269,11 +265,6 @@ def adhoc(data, params, n_startpoints, n_iterations, mix):
 
 
 def mcmc(data, params, n_mcmciterations, mix, n_startpoints, n_iterations):
-    import numpy as np
-    import copy
-    import random
-
-    from ebmtoolbox import mixture_model as mm
     m1 = np.shape(data)[1]
     p_yes, p_no, likeli_pre_all, likeli_post_all = mm.calculate_prob_mm(data, params)
 
@@ -320,7 +311,6 @@ def mcmc(data, params, n_mcmciterations, mix, n_startpoints, n_iterations):
 
 
 def objfn_likelihood(s, p_yes, p_no, mix):
-    import numpy as np
     m = np.shape(p_yes)
     k = m[1] + 1
     abnormmix = 1 - mix

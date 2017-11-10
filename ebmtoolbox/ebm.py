@@ -14,6 +14,17 @@
 # *=========================================================================*/
 from __future__ import print_function
 
+from collections import namedtuple
+
+import numpy as np
+import pandas as pd
+from sklearn.utils import resample
+
+from ebmtoolbox import corealgo as ca
+from ebmtoolbox import mixture_model as mm
+from ebmtoolbox import util
+from ebmtoolbox import weighted_mallows as wma
+
 
 def fit(data_in,
         method_options=False,
@@ -27,8 +38,6 @@ def fit(data_in,
         labels = ['CN', 'MCI', 'AD']
     if data_test is None:
         data_test = []
-    from collections import namedtuple
-    import pandas as pd
     # Default Options for the function call
 
     default_method_options = namedtuple('DefaultMethodOptions',
@@ -57,12 +66,6 @@ def fit(data_in,
         for fld in verbose_options._fields:
             setattr(default_verbose_options, fld, getattr(verbose_options, fld))
 
-    from ebmtoolbox import corealgo as ca
-    from ebmtoolbox import util
-    from ebmtoolbox import weighted_mallows as wma
-    from ebmtoolbox import mixture_model as mm
-    import numpy as np
-    from sklearn.utils import resample
 
     # Data Preparation for debm
     pd_data_all, unique_subj_ids = util.pd_read_data(data_in, 0, labels=labels)

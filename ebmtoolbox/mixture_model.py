@@ -14,13 +14,17 @@
 # *=========================================================================*/
 from __future__ import print_function
 
+import numpy as np
+import scipy.optimize as opt
+import scipy.stats
+import scipy.stats
+from scipy.stats import multivariate_normal
+
 
 def calculate_likelihood_gmm(param, data, _):
     # The  dummy "_" argument is a hack to overcome how single element tuple is handled
     # differently in windows and linux. While it remains a single element tuple in windows,
     # in linux, the data type changes to that of the tuple element.
-    import scipy.stats
-    import numpy as np
 
     param_mix = param[4]
     norm_pre = scipy.stats.norm(loc=param[0], scale=param[1])
@@ -36,8 +40,6 @@ def calculate_likelihood_gmm(param, data, _):
 
 
 def gmm_ay(data_all, data_ad_raw, data_nc_raw):
-    import numpy as np
-    import scipy.optimize as opt
     print('Warning using Option ay in Mixture Model:')
     print('The GMM optimization is sub-optimal as compared to the MATLAB implementation of the same algorithm.')
     n_eve = data_ad_raw.shape[1]
@@ -79,8 +81,6 @@ def calculate_likelihood_gmm_n(param, data, _):
     # The "_" dummy argument is a hack to overcome how single element tuple is handled
     # differently in windows and linux. While it remains a single element tuple in windows,
     # in linux, the data type changes to that of the tuple element.
-    from scipy.stats import multivariate_normal
-    import numpy as np
 
     m = np.shape(data)
 
@@ -110,8 +110,6 @@ def calculate_likelihood_gmm_n(param, data, _):
 
 def calculate_prob_mm(data, params, val_invalid=0.5):
     # Works for single dimensional features
-    import numpy as np
-    import scipy.stats
     m = np.shape(data)
     p_yes = np.zeros(m)
     likeli_pre_all = np.zeros(m)
@@ -140,8 +138,6 @@ def calculate_prob_mm(data, params, val_invalid=0.5):
 
 def calculate_prob_mm_n(data, params, val_invalid=0.5):
     # Works for N dimensional features
-    import numpy as np
-    from scipy.stats import multivariate_normal
 
     m = np.shape(data)
     n_feats = m[2]
