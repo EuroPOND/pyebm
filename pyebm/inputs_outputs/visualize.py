@@ -25,7 +25,7 @@ def BiomarkerDistribution(Data_all,params_all,BiomarkersList):
 
     m=np.shape(Data_all)
     n=len(params_all)
-    fig, ax = plt.subplots(int(round(1+m[1]/3)), 3, figsize=(13, 4*(1+m[1]/3)))
+    fig, ax = plt.subplots(int(np.ceil(m[1]/3)), 3, figsize=(13, 4*np.ceil(m[1]/3)))
     for i in range(m[1]):
             Dalli=Data_all[:,i,0];
             valid_data=np.logical_not(np.isnan(Dalli))
@@ -34,15 +34,17 @@ def BiomarkerDistribution(Data_all,params_all,BiomarkersList):
             for j in range(n):
                 i1 = int(i/3);
                 j1 = np.remainder(i,3)
-                paramsij=params_all[j][i,:];
-                norm_pre=scipy.stats.norm(loc=paramsij[0], scale=paramsij[1]);
-                norm_post=scipy.stats.norm(loc=paramsij[2],scale=paramsij[3]);
+                paramsij=params_all[j];
+                norm_pre=scipy.stats.norm(loc=paramsij.Control[i,0], scale=paramsij.Control[i,1]);
+                norm_post=scipy.stats.norm(loc=paramsij.Disease[i,0],scale=paramsij.Disease[i,1]);
+                likeli_pre=norm_pre.pdf(x_grid)
+                likeli_post=norm_post.pdf(x_grid)
                 h=np.histogram(Dallis,50)                          
                 maxh=np.nanmax(h[0])
                 ax[i1,j1].hist(Dallis,50, fc='blue', histtype='stepfilled', alpha=0.3, normed=False)
                 #ylim=ax[i,j].get_ylim()
-                likeli_pre=norm_pre.pdf(x_grid)*(paramsij[4]);
-                likeli_post=norm_post.pdf(x_grid)*(1-paramsij[4]);
+                likeli_pre=likeli_pre*(paramsij.Mixing[i]);
+                likeli_post=likeli_post*(1-paramsij.Mixing[i]);
                 likeli_tot=likeli_pre+likeli_post;
                 likeli_tot_corres = np.zeros(len(h[1])-1)
                 bin_size=h[1][1]-h[1][0]
@@ -57,7 +59,7 @@ def BiomarkerDistribution(Data_all,params_all,BiomarkersList):
                 if max_scaling>1:
                     scale_range=np.arange(1,max_scaling+1,max_scaling/1000.)
                 else:
-                    scale_range=np.arange(1,(1/max_scaling)+1,max_scaling/1000.)
+                    scale_range=np.arange(1,(10/max_scaling)+1,max_scaling/1000.)
                     scale_range=np.reciprocal(scale_range)
                 
                 for s in scale_range:
@@ -158,28 +160,38 @@ def Staging(subj_stages,Diagnosis,Labels):
     rc('mathtext', fontset='stixsans');
     c = ['#4daf4a','#377eb8','#e41a1c']
     count=-1;
-    freq_all=[]
-    for idx in [idx_cn,idx_mci,idx_ad]:
-        if len(idx)>0:
-            count=count+1;
-        freq,binc=np.histogram(subj_stages[idx],bins=binc)
-        freq = (1.*freq)/len(subj_stages)
-        if count>0:
-            freq=freq+freq_all[count-1]
-        freq_all.append(freq)
-        bw=1/(2.*nb)
-        ax.bar(binc[:-1],freq,width=bw,color=c[count],label=Labels[count],zorder=3-count)
-    ax.set_xlim([-bw,bw+np.max([1,np.max(subj_stages)])])
-    ax.set_ylim([0,maxfreq])
+    freq_all=[]; maxfreq_ml = 0;
+    if np.max(subj_stages)>1:
+        for idx in [idx_cn,idx_mci,idx_ad]:
+            if len(idx)>0:
+                count=count+1;
+            freq,binc=np.histogram(subj_stages[idx],bins=binc)
+            freq = (1.*freq)/len(subj_stages)
+            maxfreq_ml = np.max([np.max(freq),maxfreq_ml])
+            bw=2/(nb)
+            ax.bar(binc[:-1]+count*bw,freq,width=bw,color=c[count],label=Labels[count],zorder=3-count)
+        ax.set_xlim([-bw,(count+1)*bw+np.max([1,np.max(subj_stages)])])
+        ax.set_ylim([0,maxfreq_ml])
+    else:
+        for idx in [idx_cn,idx_mci,idx_ad]:
+            if len(idx)>0:
+                count=count+1;
+            freq,binc=np.histogram(subj_stages[idx],bins=binc)
+            freq = (1.*freq)/len(subj_stages)
+            if count>0:
+                freq=freq+freq_all[count-1]
+            freq_all.append(freq)
+            bw=1/(2.*nb)
+            ax.bar(binc[:-1],freq,width=bw,color=c[count],label=Labels[count],zorder=3-count)
+        ax.set_xlim([-bw,bw+np.max([1,np.max(subj_stages)])])
+        ax.set_ylim([0,maxfreq])
     if np.max(subj_stages)<1:
         ax.set_xticks(np.arange(0,1.05,0.1))
-        #ax.set_xticklabels(np.arange(0,1.05,0.1),fontsize=14)
     else:
         ax.set_xticks(np.arange(0,np.max(subj_stages)+0.05,1))
-        #ax.set_xticklabels(np.arange(0,np.max(subj_stages)+0.05,1),fontsize=14)
         
     ax.set_yticks(np.arange(0,maxfreq,0.1))
-    ax.set_yticklabels(np.arange(0,maxfreq,0.1),fontsize=14)
+    ax.tick_params(labelsize=14)
     ax.set_xlabel('Estimated Disease Stage',fontsize=16)
     ax.set_ylabel('Frequency of occurrences',fontsize=16)
     ax.legend(fontsize=16)

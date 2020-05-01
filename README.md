@@ -1,9 +1,9 @@
 # pyebm - A toolbox for Event Based Models
 
-The event-based model (EBM) for data-driven disease progression modeling estimates the sequence in which biomarkers for a disease become abnormal. This helps in understanding the dynamics of disease progression and facilitates early diagnosis by staging patients on a disease progression timeline. A more accurate and scalable EBM algorithm (Discriminative EBM) was introduced in [2]. 
+The event-based model (EBM) for data-driven disease progression modeling estimates the sequence in which biomarkers for a disease become abnormal. This helps in understanding the dynamics of disease progression and facilitates early diagnosis by staging patients on a disease progression timeline. A more accurate and scalable EBM algorithm (Discriminative EBM) was introduced in [2,4]. 
 
 Call ebm.fit to find the central ordering in a few biomarkers using method [1]
-Call debm.fit to find the central ordering in a few biomarkers using method [2]
+Call debm.fit to find the central ordering in a few biomarkers using method [2,4]
 
 EBM and its variants typically consists of 2 steps. 
 
@@ -18,7 +18,7 @@ This toolbox supports 3 different Gaussian mixture models.
 
 ## Required Libraries
 
-Python 2.7 / 3.4, numpy 1.13, pandas 0.20, sklearn 0.19, scipy 0.18, seaborn 0.8, statsmodels 0.8
+Python 3.5, numpy 1.16, pandas 0.24, sklearn 0.20, scipy 1.2, seaborn 0.9, statsmodels 0.9
 
 ## Explanation of Inputs:
 
@@ -27,7 +27,7 @@ Python 2.7 / 3.4, numpy 1.13, pandas 0.20, sklearn 0.19, scipy 0.18, seaborn 0.8
 ### (optional) MethodOptions:
 Named Tuple with any or all of the following fields:
 
-*   MixtureModel - Choose the mixture model algorithm (Options: 'vv1'[2],'vv2'(default)[4], 'ay'[3]) 
+*   MixtureModel - Choose the mixture model algorithm (Options: 'GMMvv1'[2],'GMMvv2'(default)[4], 'GMMay'[3]) 
 *   Bootstrap - Number of iterations in the bootstrapping [default - Turned Off].
 *   PatientStaging - Choose the patient staging algorithm, with a two element list consisting of ['exp'/'ml','p'/'l']. The first element in the list chooses 'ml' for most likely stage[1,2,3] or 'exp' for expected stage[4]. The second element in the list chooses 'l' for likelihood[1,2,3] or 'p' for posterior probability[4].
 *   (Only in EBM.Control) NStartpoints, Niterations and N_MCMC are algorithm specific parameters for EBM method.
@@ -84,7 +84,7 @@ Each dataframe consists of the the following fields:
 
 [3] Young, A.L., et. al.: ‘[A data-driven model of biomarker changes in sporadic Alzheimer’s disease](https://doi.org/10.1093/brain/awu176)’, Brain 137(9), 2564–2577 (2014).
 
-[4] Venkatraghavan V., et. al., ‘A Discriminative Event Based Model for Alzheimer's Disease Progression Modeling’, Manuscript under preparation.
+[4] Venkatraghavan V., et. al., ‘[Disease Progression Timeline Estimation for Alzheimer's Disease using Discriminative Event Based Modeling](https://doi.org/10.1016/j.neuroimage.2018.11.024)’, NeuroImage 186, 518 - 532 (2019).
 
 ### Contact:
 
